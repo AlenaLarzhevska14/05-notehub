@@ -5,6 +5,8 @@ export interface Note {
   title: string;
   content: string;
   tag: NoteTag;
-  createdAt?: string;
-  updatedAt?: string;
+  createdAt: string;
+  updatedAt: string;
 }
+
+export type NewNote = Pick<Note, "title" | "content" | "tag">;

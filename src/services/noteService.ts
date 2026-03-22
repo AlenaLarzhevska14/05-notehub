@@ -1,17 +1,11 @@
 import axios from "axios";
-import type { Note, NoteTag } from "../types/note";
+import type { NewNote, Note } from "../types/note";
 
 const token = import.meta.env.VITE_NOTEHUB_TOKEN;
 
 interface NotesHttpResponse {
   notes: Note[];
   totalPages: number;
-}
-
-interface NewNote {
-  title: string;
-  content: string;
-  tag: NoteTag;
 }
 
 const api = axios.create({

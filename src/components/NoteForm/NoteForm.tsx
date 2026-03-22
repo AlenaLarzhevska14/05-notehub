@@ -1,20 +1,16 @@
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import css from "./NoteForm.module.css";
-import { Formik, Form, Field, ErrorMessage } from "formik";
-import type { NoteTag } from "../../types/note";
+import { ErrorMessage, Field, Form, Formik } from "formik";
+import type { FormikHelpers } from "formik";
 import * as Yup from "yup";
-
-interface NoteFormValues {
-  title: string;
-  content: string;
-  tag: NoteTag;
-}
+import { createNote } from "../../services/noteService";
+import type { NewNote, NoteTag } from "../../types/note";
 
 interface NoteFormProps {
   onCancel: () => void;
-  onSubmit: (values: NoteFormValues) => void;
 }
 
-const initialValues: NoteFormValues = {
+const initialValues: NewNote = {
   title: "",
   content: "",
   tag: "Todo",
@@ -31,12 +27,31 @@ const validationSchema = Yup.object({
     .required("Tag is required"),
 });
 
-export default function NoteForm({ onCancel, onSubmit }: NoteFormProps) {
+export default function NoteForm({ onCancel }: NoteFormProps) {
+  const queryClient = useQueryClient();
+  const createMutation = useMutation({
+    mutationFn: createNote,
+  });
+
+  const handleSubmit = async (
+    values: NewNote,
+    { resetForm }: FormikHelpers<NewNote>
+  ) => {
+    try {
+      await createMutation.mutateAsync(values);
+      await queryClient.invalidateQueries({ queryKey: ["notes"] });
+      resetForm();
+      onCancel();
+    } catch {
+      return;
+    }
+  };
+
   return (
     <Formik
       initialValues={initialValues}
       validationSchema={validationSchema}
-      onSubmit={onSubmit}
+      onSubmit={handleSubmit}
     >
       <Form className={css.form}>
         <div className={css.formGroup}>
@@ -70,14 +85,27 @@ export default function NoteForm({ onCancel, onSubmit }: NoteFormProps) {
         </div>
 
         <div className={css.actions}>
-          <button type="button" className={css.cancelButton} onClick={onCancel}>
+          <button
+            type="button"
+            className={css.cancelButton}
+            onClick={onCancel}
+            disabled={createMutation.isPending}
+          >
             Cancel
           </button>
 
-          <button type="submit" className={css.submitButton}>
-            Create note
+          <button
+            type="submit"
+            className={css.submitButton}
+            disabled={createMutation.isPending}
+          >
+            {createMutation.isPending ? "Creating..." : "Create note"}
           </button>
         </div>
+
+        {createMutation.isError && (
+          <span className={css.error}>Failed to create note.</span>
+        )}
       </Form>
     </Formik>
   );
