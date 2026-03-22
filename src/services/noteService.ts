@@ -8,11 +8,6 @@ interface NotesHttpResponse {
   totalPages: number;
 }
 
-// interface FetchNotesParams {
-//   page: number;
-//   perPage: number;
-//   search?: string;
-// }
 interface NewNote {
   title: string;
   content: string;
